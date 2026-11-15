@@ -1,7 +1,14 @@
 
-USE ConsultorioDB;
+--creo la base si esta no existe, TEST!!!
+
+IF DB_ID('ConsultorioDB') IS NULL
+BEGIN
+    EXEC('CREATE DATABASE ConsultorioDB');
+END;
 GO
 
+USE ConsultorioDB;
+GO
 -- TABLA: Pacientes
 -- Almacena los datos administrativos de cada paciente.
 
