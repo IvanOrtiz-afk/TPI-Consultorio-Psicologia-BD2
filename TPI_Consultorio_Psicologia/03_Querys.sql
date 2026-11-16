@@ -763,19 +763,316 @@ SELECT *
 FROM dbo.Objetivos
 ORDER BY IdObjetivo;
 
+--PARA EL VIDEO
+
+USE ConsultorioDB;
+GO
+
+SELECT * FROM Pacientes ORDER BY IdPaciente;
+
+SELECT * FROM FichaClinica ORDER BY IdPaciente;
+
+SELECT * FROM HistorialEstadosPaciente
+ORDER BY IdPaciente, FechaCambio;
+
+-------------------------
+
+SELECT * FROM PlanificacionesAtencion;
+
+SELECT * FROM Honorarios;
+
+SELECT * FROM Turnos
+ORDER BY FechaHoraInicio;
+
+SELECT * FROM HistorialReprogramaciones;
+
+--------------------------
+
+SELECT * FROM Pagos;
+
+SELECT * FROM PagosTurnos;
+
+SELECT * FROM Bonificaciones;
+
+--------------------------
+
+SELECT * FROM RegistrosClinicos;
+
+SELECT * FROM Actividades;
+
+SELECT * FROM ActividadesPaciente;
+
+SELECT * FROM Objetivos;
+
+SELECT * FROM HistorialObjetivosPaciente;
+
+SELECT * FROM Profesionales;
+
+SELECT * FROM AntecedentesProfesionales;
+
+---------------------------
+
+SELECT
+    IdPaciente,
+    Nombre,
+    Apellido,
+    Estado
+FROM Pacientes
+ORDER BY IdPaciente;
+
+----------------------------
+
+SELECT
+    IdTurno,
+    IdPaciente,
+    FechaHoraInicio,
+    FechaHoraFin,
+    Estado
+FROM Turnos
+ORDER BY IdPaciente, FechaHoraInicio;
+
+-----------------------------
+
 SELECT
     p.IdPaciente,
     p.Nombre,
     p.Apellido,
-    COUNT(DISTINCT ap.IdActividadPaciente) AS CantidadActividades,
-    COUNT(DISTINCT ho.IdHistorialObjetivo) AS CantidadObjetivos
-FROM dbo.Pacientes p
-LEFT JOIN dbo.ActividadesPaciente ap
-    ON ap.IdPaciente = p.IdPaciente
-LEFT JOIN dbo.HistorialObjetivosPaciente ho
-    ON ho.IdPaciente = p.IdPaciente
-GROUP BY
-    p.IdPaciente,
-    p.Nombre,
-    p.Apellido
-ORDER BY p.IdPaciente;
+    p.Estado,
+    f.IdFichaClinica,
+    f.FechaCreacion
+FROM Pacientes AS p
+INNER JOIN FichaClinica AS f
+    ON f.IdPaciente = p.IdPaciente;
+
+------------------------------
+
+SELECT *
+FROM HistorialEstadosPaciente
+ORDER BY IdPaciente, FechaCambio;
+
+------------------------------
+
+SELECT
+    IdTurno,
+    ImporteAplicado,
+    ImportePagado,
+    ImporteBonificado,
+    SaldoPendiente
+FROM VW_Turnos_Detalle
+WHERE IdTurno = 8;
+
+-------------------------------
+
+SELECT
+    pt.IdPago,
+    p.IdPaciente AS PacienteDelPago,
+    pt.IdTurno,
+    t.IdPaciente AS PacienteDelTurno
+FROM PagosTurnos AS pt
+INNER JOIN Pagos AS p
+    ON p.IdPago = pt.IdPago
+INNER JOIN Turnos AS t
+    ON t.IdTurno = pt.IdTurno;
+
+--------------------------------
+
+SELECT
+    r.IdRegistroClinico,
+    r.IdPaciente AS PacienteDelRegistro,
+    r.IdTurno,
+    t.IdPaciente AS PacienteDelTurno
+FROM RegistrosClinicos AS r
+LEFT JOIN Turnos AS t
+    ON t.IdTurno = r.IdTurno;
+
+--------------------------------
+
+SELECT *
+FROM VW_Turnos_Detalle
+ORDER BY IdTurno;
+
+--------------------------------
+
+SELECT *
+FROM VW_Pacientes_ResumenEconomico
+ORDER BY IdPaciente;
+
+--------------------------------
+
+SELECT *
+FROM VW_Pagos_Detalle
+ORDER BY IdPago;
+
+--------------------------------
+
+SELECT *
+FROM Pagos;
+
+SELECT *
+FROM PagosTurnos;
+
+--------------------------------
+
+EXEC dbo.SP_ReporteTurnosPaciente
+    @IdPaciente = 1,
+    @FechaDesde = '2026-10-01',
+    @FechaHasta = '2026-12-31';
+
+-------------------------------- TESTING!!!
+
+USE ConsultorioDB;
+GO
+
+BEGIN TRANSACTION;
+
+INSERT INTO Pacientes
+    (Nombre, Apellido, DNI, Estado)
+VALUES
+    ('Prueba Video', 'Trigger', '88888881', 'Activo');
+
+DECLARE @IdNuevo INT = SCOPE_IDENTITY();
+
+SELECT *
+FROM Pacientes
+WHERE IdPaciente = @IdNuevo;
+
+SELECT *
+FROM FichaClinica
+WHERE IdPaciente = @IdNuevo;
+
+SELECT *
+FROM HistorialEstadosPaciente
+WHERE IdPaciente = @IdNuevo;
+
+ROLLBACK TRANSACTION;
+
+--------------------------------------
+
+INSERT INTO Pacientes
+    (Nombre, Apellido, DNI, Estado)
+VALUES
+    ('Prueba Video', 'Suspendido', '88888882', 'Suspendido');
+
+--------------------------------------
+
+SELECT IdPaciente, Nombre, Apellido, Estado
+FROM Pacientes
+ORDER BY IdPaciente;
+
+--------------------------------------
+
+INSERT INTO Turnos
+    (IdPaciente, IdPlanificacion, FechaHoraInicio,
+     Modalidad, Estado, ImporteAplicado)
+VALUES
+    (3, NULL, '2026-12-20T10:00:00',
+     'Presencial', 'Programado', 15000);
+
+--------------------------------------
+
+INSERT INTO Turnos
+    (IdPaciente, IdPlanificacion, FechaHoraInicio,
+     Modalidad, Estado, ImporteAplicado)
+VALUES
+    (1, NULL, '2026-10-26T10:30:00',
+     'Presencial', 'Programado', 15000);
+
+---------------------------------------
+
+DELETE FROM Pacientes
+WHERE IdPaciente = 1;
+
+---------------------------------------
+
+INSERT INTO Bonificaciones
+    (IdTurno, Importe, Motivo)
+VALUES
+    (1, 5000, 'Prueba de validación del video');
+
+---------------------------------------
+
+SELECT
+    pt.IdPago,
+    p.IdPaciente AS PacienteDelPago,
+    pt.IdTurno,
+    t.IdPaciente AS PacienteDelTurno
+FROM PagosTurnos pt
+INNER JOIN Pagos p ON p.IdPago = pt.IdPago
+INNER JOIN Turnos t ON t.IdTurno = pt.IdTurno;
+
+-------------------------------------------
+
+SELECT
+    r.IdRegistroClinico,
+    r.IdPaciente AS PacienteDelRegistro,
+    r.IdTurno,
+    t.IdPaciente AS PacienteDelTurno
+FROM RegistrosClinicos r
+LEFT JOIN Turnos t ON t.IdTurno = r.IdTurno;
+
+----------------------------------------------
+
+EXEC dbo.SP_ReporteTurnosPaciente
+    @IdPaciente = 1,
+    @FechaDesde = '2026-10-01',
+    @FechaHasta = '2026-12-31';
+
+----------------------------------------------
+
+EXEC dbo.SP_ReporteTurnosPaciente
+    @IdPaciente = 9999,
+    @FechaDesde = '2026-10-01',
+    @FechaHasta = '2026-12-31';
+
+----------------------------------------------
+
+EXEC dbo.SP_ReporteTurnosPaciente
+    @IdPaciente = 1,
+    @FechaDesde = '2026-12-31',
+    @FechaHasta = '2026-10-01';
+
+-----------------------------------------------
+
+BEGIN TRANSACTION;
+
+DECLARE @IdTurnoPrueba INT;
+
+INSERT INTO Turnos
+    (IdPaciente, IdPlanificacion, FechaHoraInicio,
+     Modalidad, Estado, ImporteAplicado)
+VALUES
+    (1, NULL, '2099-01-01T10:00:00',
+     'Presencial', 'Programado', 15000);
+
+SET @IdTurnoPrueba = SCOPE_IDENTITY();
+
+EXEC dbo.SP_RegistrarPago
+    @IdPaciente = 1,
+    @IdTurno = @IdTurnoPrueba,
+    @MetodoPago = 'Transferencia',
+    @Observaciones = 'Demostración del procedimiento';
+
+SELECT *
+FROM VW_Turnos_Detalle
+WHERE IdTurno = @IdTurnoPrueba;
+
+ROLLBACK TRANSACTION;
+
+-----------------------------------------------
+
+EXEC dbo.SP_RegistrarPago
+    @IdPaciente = 1,
+    @IdTurno = 1,
+    @MetodoPago = 'Transferencia',
+    @Observaciones = 'Prueba de pago duplicado';
+
+-----------------------------------------------
+
+SELECT * FROM VW_Turnos_Detalle;
+
+SELECT * FROM VW_Pacientes_ResumenEconomico;
+
+SELECT * FROM VW_Pagos_Detalle;
+
+------------------------------------------------
+
